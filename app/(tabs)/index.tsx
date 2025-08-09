@@ -6,6 +6,19 @@ import { Alert, FlatList, Pressable, StyleSheet, Switch, Text, TextInput, View }
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const DEFAULT_CHUNK_SIZE = 1000;
+const DEFAULT_FONT_SIZE = 6;
+
+const BOOKS_DIR = FileSystem.documentDirectory + 'books';
+type BookRecord = {
+  fileName: string;
+  textLength: number;
+  fontSize: number;
+  chunkSize: number;
+  lastCopiedIndex: number;
+  updatedAt: number;
+};
+const buildBookKey = (name: string, length: number) => `${name || 'unknown'}__len_${length}`;
+const recordPathForKey = (key: string) => `${BOOKS_DIR}/${encodeURIComponent(key)}.json`;
 
 const normalizeText = (t: string) => t.replace(/\r\n?/g, '\n').replace(/\uFEFF/g, '');
 
@@ -122,8 +135,16 @@ export default function HomeScreen() {
   const [fontSize, setFontSize] = useState<number>(6);
   const [expandedSet, setExpandedSet] = useState<Set<number>>(new Set());
   const [collapsedSet, setCollapsedSet] = useState<Set<number>>(new Set());
+  const [bookKey, setBookKey] = useState<string>('');
+  const [hydrating, setHydrating] = useState<boolean>(false);
 
   const insets = useSafeAreaInsets();
+
+  React.useEffect(() => {
+    (async () => {
+      try { await FileSystem.makeDirectoryAsync(BOOKS_DIR, { intermediates: true }); } catch (e) { /* ignore */ }
+    })();
+  }, []);
 
   const chunks = useMemo(() => splitByLength(text, chunkSize), [text, chunkSize]);
 
@@ -183,6 +204,27 @@ export default function HomeScreen() {
     }
   }, [previewEnabled]);
 
+  const loadRecord = useCallback(async (key: string): Promise<BookRecord | null> => {
+    try {
+      const p = recordPathForKey(key);
+      const info = await FileSystem.getInfoAsync(p);
+      if (!info.exists) return null;
+      const raw = await FileSystem.readAsStringAsync(p);
+      return JSON.parse(raw) as BookRecord;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const saveRecord = useCallback(async (key: string, rec: BookRecord) => {
+    try {
+      const p = recordPathForKey(key);
+      await FileSystem.writeAsStringAsync(p, JSON.stringify(rec));
+    } catch {
+      // ignore write errors
+    }
+  }, []);
+
   const pickAndRead = useCallback(async () => {
     try {
       setLoading(true);
@@ -190,17 +232,49 @@ export default function HomeScreen() {
       if ((res as any).canceled) return;
       const asset = (res as any).assets?.[0];
       if (!asset?.uri) return;
-      setFileName(asset.name || '');
+
       let content = await FileSystem.readAsStringAsync(asset.uri, { encoding: FileSystem.EncodingType.UTF8 });
       content = normalizeText(content);
+
+      const key = buildBookKey(asset.name || 'unknown', content.length);
+
+      setHydrating(true);
+      setFileName(asset.name || '');
       setText(content);
+      setBookKey(key);
+
+      const rec = await loadRecord(key);
+      if (rec) {
+        if (typeof rec.fontSize === 'number') setFontSize(rec.fontSize);
+        if (typeof rec.chunkSize === 'number') setChunkSize(rec.chunkSize);
+        if (typeof rec.lastCopiedIndex === 'number') setLastCopiedIndex(rec.lastCopiedIndex);
+      } else {
+        // First time this book is opened: apply defaults and reset progress
+        setFontSize(DEFAULT_FONT_SIZE);
+        setChunkSize(DEFAULT_CHUNK_SIZE);
+        setLastCopiedIndex(-1);
+      }
     } catch (e: any) {
       console.warn(e);
       Alert.alert('读取失败', e?.message ?? String(e));
     } finally {
+      setHydrating(false);
       setLoading(false);
     }
-  }, []);
+  }, [loadRecord]);
+
+  React.useEffect(() => {
+    if (!bookKey || hydrating) return;
+    const rec: BookRecord = {
+      fileName: fileName || '',
+      textLength: text.length,
+      fontSize,
+      chunkSize,
+      lastCopiedIndex,
+      updatedAt: Date.now(),
+    };
+    saveRecord(bookKey, rec);
+  }, [bookKey, hydrating, fileName, text.length, fontSize, chunkSize, lastCopiedIndex, saveRecord]);
 
   const copyChunk = useCallback(async (t: string, index: number) => {
     try {
