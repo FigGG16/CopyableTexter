@@ -2,7 +2,7 @@ import * as Clipboard from 'expo-clipboard';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, FlatList, Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { Alert, FlatList, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const DEFAULT_CHUNK_SIZE = 1000;
@@ -138,6 +138,11 @@ export default function HomeScreen() {
   const [bookKey, setBookKey] = useState<string>('');
   const [hydrating, setHydrating] = useState<boolean>(false);
 
+  type BookRecordWithKey = BookRecord & { key: string };
+  const [recordsVisible, setRecordsVisible] = useState<boolean>(false);
+  const [records, setRecords] = useState<BookRecordWithKey[]>([]);
+  const [recordsLoading, setRecordsLoading] = useState<boolean>(false);
+
   const insets = useSafeAreaInsets();
 
   React.useEffect(() => {
@@ -223,6 +228,55 @@ export default function HomeScreen() {
     } catch {
       // ignore write errors
     }
+  }, []);
+
+  const listAllRecords = useCallback(async () => {
+    try {
+      setRecordsLoading(true);
+      const info = await FileSystem.getInfoAsync(BOOKS_DIR);
+      if (!info.exists) { setRecords([]); return; }
+      const files = await FileSystem.readDirectoryAsync(BOOKS_DIR);
+      const items: BookRecordWithKey[] = [];
+      for (const f of files) {
+        if (!f.endsWith('.json')) continue;
+        const key = decodeURIComponent(f.replace(/\.json$/, ''));
+        try {
+          const raw = await FileSystem.readAsStringAsync(`${BOOKS_DIR}/${f}`);
+          const rec = JSON.parse(raw) as BookRecord;
+          items.push({ key, ...rec });
+        } catch {}
+      }
+      // sort by updatedAt desc
+      items.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+      setRecords(items);
+    } finally {
+      setRecordsLoading(false);
+    }
+  }, []);
+
+  const deleteRecordByKey = useCallback(async (key: string) => {
+    try {
+      const p = recordPathForKey(key);
+      await FileSystem.deleteAsync(p, { idempotent: true });
+      setRecords(prev => prev.filter(r => r.key !== key));
+      if (bookKey === key) {
+        // If current book's record is removed, keep runtime state; future saves will recreate.
+      }
+    } catch (e) {}
+  }, [bookKey]);
+
+  const clearAllRecords = useCallback(async () => {
+    try {
+      const info = await FileSystem.getInfoAsync(BOOKS_DIR);
+      if (!info.exists) return;
+      const files = await FileSystem.readDirectoryAsync(BOOKS_DIR);
+      for (const f of files) {
+        if (f.endsWith('.json')) {
+          await FileSystem.deleteAsync(`${BOOKS_DIR}/${f}`, { idempotent: true });
+        }
+      }
+      setRecords([]);
+    } catch (e) {}
   }, []);
 
   const pickAndRead = useCallback(async () => {
@@ -321,6 +375,9 @@ export default function HomeScreen() {
             style={styles.input}
           />
         </View>
+        <Pressable style={styles.secondaryButton} onPress={async () => { await listAllRecords(); setRecordsVisible(true); }}>
+          <Text style={styles.secondaryButtonText}>书库</Text>
+        </Pressable>
       </View>
 
       <View style={styles.row}>
@@ -339,6 +396,63 @@ export default function HomeScreen() {
           </Pressable>
         </View>
       </View>
+
+      <Modal visible={recordsVisible} transparent animationType="slide" onRequestClose={() => setRecordsVisible(false)}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>本地书籍记录</Text>
+              <Pressable onPress={() => setRecordsVisible(false)} style={styles.modalCloseBtn}>
+                <Text style={styles.modalCloseText}>关闭</Text>
+              </Pressable>
+            </View>
+            <View style={styles.modalActions}>
+              <Pressable
+                style={styles.dangerButton}
+                onPress={() => {
+                  Alert.alert('清空所有记录', '此操作不可恢复，确定要删除全部吗？', [
+                    { text: '取消', style: 'cancel' },
+                    { text: '删除', style: 'destructive', onPress: () => clearAllRecords() },
+                  ]);
+                }}
+              >
+                <Text style={styles.dangerButtonText}>清空全部</Text>
+              </Pressable>
+              <Pressable style={styles.secondaryButton} onPress={listAllRecords} disabled={recordsLoading}>
+                <Text style={styles.secondaryButtonText}>{recordsLoading ? '刷新中…' : '刷新'}</Text>
+              </Pressable>
+            </View>
+            <ScrollView style={styles.modalList} contentContainerStyle={{ paddingBottom: 8 }}>
+              {records.length === 0 ? (
+                <Text style={styles.emptyText}>暂无记录</Text>
+              ) : (
+                records.map((r) => (
+                  <View key={r.key} style={styles.recordItem}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.recordTitle} numberOfLines={1} ellipsizeMode="tail">{r.fileName || '[未命名]'}</Text>
+                      <Text style={styles.recordMeta} numberOfLines={2} ellipsizeMode="tail">
+                        长度：{r.textLength} · 段长：{r.chunkSize} · 字号：{r.fontSize} · 进度：{r.lastCopiedIndex >= 0 ? `第 ${r.lastCopiedIndex + 1} 段` : '未开始'}
+                        {'\n'}更新时间：{new Date(r.updatedAt || 0).toLocaleString()}
+                      </Text>
+                    </View>
+                    <Pressable
+                      style={styles.dangerOutlineBtn}
+                      onPress={() => {
+                        Alert.alert('删除这本书的记录？', r.fileName || '', [
+                          { text: '取消', style: 'cancel' },
+                          { text: '删除', style: 'destructive', onPress: () => deleteRecordByKey(r.key) },
+                        ]);
+                      }}
+                    >
+                      <Text style={styles.dangerOutlineBtnText}>删除</Text>
+                    </Pressable>
+                  </View>
+                ))
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
 
       {!!fileName && (
         <Text style={styles.fileInfo} numberOfLines={1}>
@@ -435,4 +549,22 @@ const styles = StyleSheet.create({
   counterBar: { backgroundColor: '#F6F8FA', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8, marginBottom: 8, borderWidth: 1, borderColor: '#E5E7EB' },
   counterText: { color: '#333', fontWeight: '600' },
   copiedText: { marginTop: 4, color: '#007AFF' },
+
+  secondaryButton: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: '#999' },
+  secondaryButtonText: { color: '#333', fontWeight: '600' },
+  modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', alignItems: 'center', justifyContent: 'center', padding: 16 },
+  modalCard: { width: '100%', maxWidth: 640, maxHeight: '80%', backgroundColor: '#fff', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#E5E7EB' },
+  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
+  modalTitle: { fontSize: 18, fontWeight: '700' },
+  modalCloseBtn: { paddingHorizontal: 10, paddingVertical: 6 },
+  modalCloseText: { color: '#007AFF', fontWeight: '600' },
+  modalActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
+  modalList: { borderTopWidth: 1, borderTopColor: '#EEE', paddingTop: 8 },
+  recordItem: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', borderWidth: 1, borderColor: '#EEE', borderRadius: 10, padding: 10, marginBottom: 8 },
+  recordTitle: { fontSize: 16, fontWeight: '600' },
+  recordMeta: { color: '#666', marginTop: 2 },
+  dangerButton: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, backgroundColor: '#EF4444' },
+  dangerButtonText: { color: '#fff', fontWeight: '700' },
+  dangerOutlineBtn: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: '#EF4444' },
+  dangerOutlineBtnText: { color: '#EF4444', fontWeight: '600' },
 });
