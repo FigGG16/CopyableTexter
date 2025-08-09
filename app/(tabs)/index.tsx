@@ -5,7 +5,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Alert, FlatList, Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const DEFAULT_CHUNK_SIZE = 500;
+const DEFAULT_CHUNK_SIZE = 1000;
 
 const normalizeText = (t: string) => t.replace(/\r\n?/g, '\n').replace(/\uFEFF/g, '');
 
@@ -15,6 +15,101 @@ const splitByLength = (raw: string, size: number) => {
   const out: string[] = [];
   for (let i = 0; i < arr.length; i += s) out.push(arr.slice(i, i + s).join(''));
   return out;
+};
+
+type Chapter = { title: string; start: number; end: number };
+
+type HeadingSets = { majors: Chapter[]; minors: Chapter[] };
+
+const extractHeadings = (t: string): HeadingSets => {
+  if (!t) return { majors: [], minors: [] };
+
+  // Normalize newlines and spaces (convert CRLF, remove BOM elsewhere; also normalize full-width spaces)
+  const text = t.replace(/\r\n?/g, '\n').replace(/\uFEFF/g, '').replace(/[\u00A0\u3000]+/g, ' ');
+  const lines = text.split('\n');
+
+  // Precompute UTF-16 line start offsets to align with JS string indices
+  const lineStarts: number[] = new Array(lines.length);
+  let cu = 0;
+  for (let i = 0; i < lines.length; i++) {
+    lineStarts[i] = cu;
+    cu += lines[i].length + 1; // +1 for the removed "\n"
+  }
+
+  // ====== Patterns ======
+  // Major headings
+  const reCNOrdinal = '[零一二三四五六七八九十百千两]+';
+  const reDigit = '\\d+';
+  const reCNUnit = '(章|卷|部分|篇|编|讲|节|回)';
+
+  const reMajorCN = new RegExp(`^\\s*(第(${reCNOrdinal}|${reDigit})${reCNUnit}).*`); // 第X章/第X卷/第X部分…
+  const reMajorPart = /^\s*(Part)\s*\d+.*$/i;                                     // Part 1 …
+  const reMajorChapterEN = /^\s*(Chapter)\s*\d+.*$/i;                              // Chapter 1 …
+  const reMajorSectionCN = new RegExp(`^\\s*(第(${reCNOrdinal}|${reDigit})部分).*`); // 第一部分 …（冗余保险）
+
+  // Special stand-alone majors commonly found at the beginning or between parts
+  const reMajorSpecial = /^(\s*(目录|章节概要与阅读导图|前言|序言|序|引言|作者序|译者序|译者后记|作者简介|推荐序|中文版序|结语|尾声|致\s*谢|致谢|术语表|参考文献|重要参考资料|网上附录|附录[一二三四五六七八九十\dA-Z]*|Contents|Foreword(?::.*)?|Introduction|Concluding Reflections)\s*)$/i;
+
+  // Minor headings
+  // Numeric prefixed small sections like: 01 标题 / 1.2 小结 / 1、标题 / 1．标题 / 1. 标题
+  const reMinorNumeric = /^(\s*([0-9]{1,3}|[０-９]{1,3})([\.．、:]|\s+)\s*[^\s].*)$/;
+  // Known textbook sub-headings like "本章小结/简答题/计算题/网上练习/网上资料/小结/思考题"
+  const reMinorKeywords = /^(\s*(本章小结|小结|简答题|计算题|思考题|网上练习|网上资料|练习题|重点回顾)\s*)$/;
+
+  // A short, punctuation-light line near a blank line often indicates a subheading
+  const isLikelyTitleLine = (L: string) => {
+    if (!L) return false;
+    // avoid typical sentences
+    if (/[。！？!?…]+/.test(L)) return false;
+    const len = L.length;
+    return len >= 2 && len <= 40;
+  };
+
+  type RawHit = { title: string; start: number; type: 'major' | 'minor' };
+  const hits: RawHit[] = [];
+
+  const isMajor = (L: string) => reMajorCN.test(L) || reMajorPart.test(L) || reMajorChapterEN.test(L) || reMajorSectionCN.test(L) || reMajorSpecial.test(L);
+
+  const isMinor = (L: string, i: number) => {
+    if (!L) return false;
+    if (isMajor(L)) return false;
+    if (reMinorNumeric.test(L)) return true;
+    if (reMinorKeywords.test(L)) return true;
+    // Heuristic around blank lines
+    if (!isLikelyTitleLine(L)) return false;
+    const prevBlank = i > 0 && lines[i - 1].trim() === '';
+    const nextBlank = i + 1 < lines.length && lines[i + 1].trim() === '';
+    return prevBlank || nextBlank;
+  };
+
+  // Scan
+  for (let i = 0; i < lines.length; i++) {
+    const raw = lines[i];
+    const L = raw.trim();
+    if (!L) continue;
+    if (isMajor(L)) {
+      hits.push({ title: L, start: lineStarts[i], type: 'major' });
+      continue;
+    }
+    if (isMinor(L, i)) {
+      hits.push({ title: L, start: lineStarts[i], type: 'minor' });
+    }
+  }
+
+  if (hits.length === 0) return { majors: [], minors: [] };
+  hits.sort((a, b) => a.start - b.start);
+
+  const majors: Chapter[] = [];
+  const minors: Chapter[] = [];
+
+  for (let i = 0; i < hits.length; i++) {
+    const start = hits[i].start;
+    const end = i + 1 < hits.length ? hits[i + 1].start : text.length;
+    const c: Chapter = { title: hits[i].title, start, end };
+    if (hits[i].type === 'major') majors.push(c); else minors.push(c);
+  }
+
+  return { majors, minors };
 };
 
 export default function HomeScreen() {
@@ -31,6 +126,52 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
 
   const chunks = useMemo(() => splitByLength(text, chunkSize), [text, chunkSize]);
+
+  const headingSets = useMemo(() => extractHeadings(text), [text]);
+  const chapters = headingSets.majors;
+  const subChapters = headingSets.minors;
+
+  const chunkStarts = useMemo(() => {
+    // Compute per-chunk start offsets in UTF-16 code units by replaying the split on code points
+    const points = Array.from(text);
+    const offsetsCU: number[] = new Array(points.length + 1);
+    offsetsCU[0] = 0;
+    for (let i = 0; i < points.length; i++) {
+      // Each code point may occupy 1 or 2 UTF-16 code units; string length gives code units
+      offsetsCU[i + 1] = offsetsCU[i] + points[i].length;
+    }
+    const starts: number[] = [];
+    for (let i = 0; i < points.length; i += chunkSize) {
+      starts.push(offsetsCU[i]);
+    }
+    return starts;
+  }, [text, chunkSize]);
+
+  const chapterTitlesForChunks = useMemo(() => {
+    if (chapters.length === 0) return new Array(chunks.length).fill('');
+    const titles: string[] = new Array(chunks.length);
+    let ci = 0; // chapter index pointer
+    for (let i = 0; i < chunks.length; i++) {
+      const pos = chunkStarts[i];
+      while (ci + 1 < chapters.length && pos >= chapters[ci + 1].start) ci++;
+      const ch = chapters[ci];
+      titles[i] = pos >= ch.start && pos < ch.end ? ch.title : '';
+    }
+    return titles;
+  }, [chapters, chunks, chunkStarts]);
+
+  const subChapterTitlesForChunks = useMemo(() => {
+    if (subChapters.length === 0) return new Array(chunks.length).fill('');
+    const titles: string[] = new Array(chunks.length);
+    let si = 0; // subchapter index pointer
+    for (let i = 0; i < chunks.length; i++) {
+      const pos = chunkStarts[i];
+      while (si + 1 < subChapters.length && pos >= subChapters[si + 1].start) si++;
+      const sc = subChapters[si];
+      titles[i] = pos >= sc.start && pos < sc.end ? sc.title : '';
+    }
+    return titles;
+  }, [subChapters, chunks, chunkStarts]);
 
   React.useEffect(() => {
     if (previewEnabled) {
@@ -170,7 +311,11 @@ export default function HomeScreen() {
                 );
               })()}
               <View style={styles.cardFooter}>
-                <Text style={styles.chunkMeta}>第 {index + 1} 段 · {item.length} 字</Text>
+                <Text style={styles.chunkMeta} numberOfLines={2} ellipsizeMode="tail">
+                  第 {index + 1} 段 · {item.length} 字
+                  {chapterTitlesForChunks[index] ? ` · 章节：${chapterTitlesForChunks[index]}` : ''}
+                  {subChapterTitlesForChunks[index] ? ` · 小节：${subChapterTitlesForChunks[index]}` : ''}
+                </Text>
                 <Pressable 
                   onPress={() => copyChunk(item, index)} 
                   style={lastCopiedIndex === index ? [styles.copyBtn, styles.copyBtnCopied] : styles.copyBtn}
@@ -209,8 +354,8 @@ const styles = StyleSheet.create({
   card: { borderWidth: 1, borderColor: '#e3e3e3', borderRadius: 10, padding: 12, marginBottom: 10, backgroundColor: '#fff' },
   chunkText: { fontSize: 16, lineHeight: 24, marginBottom: 10 },
   cardFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  chunkMeta: { color: '#666' },
-  copyBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: '#007AFF' },
+  chunkMeta: { color: '#666', flex: 1, marginRight: 8,fontSize:10 },
+  copyBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: '#007AFF', flexShrink: 0 },
   copyBtnCopied: { backgroundColor: '#E0F0FF', borderColor: '#007AFF' },
   copyBtnText: { color: '#007AFF', fontWeight: '600' },
   counterBar: { backgroundColor: '#F6F8FA', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8, marginBottom: 8, borderWidth: 1, borderColor: '#E5E7EB' },
