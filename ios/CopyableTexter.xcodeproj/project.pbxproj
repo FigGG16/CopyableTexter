@@ -8,28 +8,28 @@
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		254106D1FFC53036F856688A /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8A203706C2E101FCF986033 /* ExpoModulesProvider.swift */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		49009E5A6D10293AE642734A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 579DF9298503ACA985D9F2AD /* PrivacyInfo.xcprivacy */; };
-		6D31FA250F1E484EC263729E /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05464E6BA1AD405E34BEB210 /* ExpoModulesProvider.swift */; };
-		B3EE568045CC8B5836B0E229 /* libPods-CopyableTexter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B615E30575D1C562DAE2C832 /* libPods-CopyableTexter.a */; };
+		93D0099D8BBE562DE8B01A07 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = FE1B329B5098DE50D05CA837 /* PrivacyInfo.xcprivacy */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
+		E47C399B5484DEF76DBD052D /* libPods-CopyableTexter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B108899F50B3616AB384E78C /* libPods-CopyableTexter.a */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		05464E6BA1AD405E34BEB210 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-CopyableTexter/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		08D97D0B5CD78200CD5BE0F4 /* Pods-CopyableTexter.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CopyableTexter.release.xcconfig"; path = "Target Support Files/Pods-CopyableTexter/Pods-CopyableTexter.release.xcconfig"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* CopyableTexter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CopyableTexter.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = CopyableTexter/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = CopyableTexter/Info.plist; sourceTree = "<group>"; };
-		579DF9298503ACA985D9F2AD /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = CopyableTexter/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		751ED85C81BC4E964726A984 /* Pods-CopyableTexter.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CopyableTexter.release.xcconfig"; path = "Target Support Files/Pods-CopyableTexter/Pods-CopyableTexter.release.xcconfig"; sourceTree = "<group>"; };
-		84E4DDB4EA076425D25A2693 /* Pods-CopyableTexter.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CopyableTexter.debug.xcconfig"; path = "Target Support Files/Pods-CopyableTexter/Pods-CopyableTexter.debug.xcconfig"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = CopyableTexter/SplashScreen.storyboard; sourceTree = "<group>"; };
-		B615E30575D1C562DAE2C832 /* libPods-CopyableTexter.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-CopyableTexter.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B108899F50B3616AB384E78C /* libPods-CopyableTexter.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-CopyableTexter.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = CopyableTexter/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* CopyableTexter-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "CopyableTexter-Bridging-Header.h"; path = "CopyableTexter/CopyableTexter-Bridging-Header.h"; sourceTree = "<group>"; };
+		F8A203706C2E101FCF986033 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-CopyableTexter/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		F99C8257158481C5740CAC9C /* Pods-CopyableTexter.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CopyableTexter.debug.xcconfig"; path = "Target Support Files/Pods-CopyableTexter/Pods-CopyableTexter.debug.xcconfig"; sourceTree = "<group>"; };
+		FE1B329B5098DE50D05CA837 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = CopyableTexter/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,21 +37,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B3EE568045CC8B5836B0E229 /* libPods-CopyableTexter.a in Frameworks */,
+				E47C399B5484DEF76DBD052D /* libPods-CopyableTexter.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		0B4662E68A107DC477D717FD /* ExpoModulesProviders */ = {
-			isa = PBXGroup;
-			children = (
-				2E7FD2B954BF259103638FC1 /* CopyableTexter */,
-			);
-			name = ExpoModulesProviders;
-			sourceTree = "<group>";
-		};
 		13B07FAE1A68108700A75B9A /* CopyableTexter */ = {
 			isa = PBXGroup;
 			children = (
@@ -61,7 +53,7 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				579DF9298503ACA985D9F2AD /* PrivacyInfo.xcprivacy */,
+				FE1B329B5098DE50D05CA837 /* PrivacyInfo.xcprivacy */,
 			);
 			name = CopyableTexter;
 			sourceTree = "<group>";
@@ -70,17 +62,9 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				B615E30575D1C562DAE2C832 /* libPods-CopyableTexter.a */,
+				B108899F50B3616AB384E78C /* libPods-CopyableTexter.a */,
 			);
 			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		2E7FD2B954BF259103638FC1 /* CopyableTexter */ = {
-			isa = PBXGroup;
-			children = (
-				05464E6BA1AD405E34BEB210 /* ExpoModulesProvider.swift */,
-			);
-			name = CopyableTexter;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -97,8 +81,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				ABCBC1FE745B2BEEB34C4549 /* Pods */,
-				0B4662E68A107DC477D717FD /* ExpoModulesProviders */,
+				AF1CE93A05F5BCCA74022CC7 /* Pods */,
+				9304594A8E856AC27A5E8C78 /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -113,11 +97,19 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		ABCBC1FE745B2BEEB34C4549 /* Pods */ = {
+		9304594A8E856AC27A5E8C78 /* ExpoModulesProviders */ = {
 			isa = PBXGroup;
 			children = (
-				84E4DDB4EA076425D25A2693 /* Pods-CopyableTexter.debug.xcconfig */,
-				751ED85C81BC4E964726A984 /* Pods-CopyableTexter.release.xcconfig */,
+				C91FC292C68CABA621DD6DA2 /* CopyableTexter */,
+			);
+			name = ExpoModulesProviders;
+			sourceTree = "<group>";
+		};
+		AF1CE93A05F5BCCA74022CC7 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				F99C8257158481C5740CAC9C /* Pods-CopyableTexter.debug.xcconfig */,
+				08D97D0B5CD78200CD5BE0F4 /* Pods-CopyableTexter.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -131,6 +123,14 @@
 			path = CopyableTexter/Supporting;
 			sourceTree = "<group>";
 		};
+		C91FC292C68CABA621DD6DA2 /* CopyableTexter */ = {
+			isa = PBXGroup;
+			children = (
+				F8A203706C2E101FCF986033 /* ExpoModulesProvider.swift */,
+			);
+			name = CopyableTexter;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -139,13 +139,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "CopyableTexter" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				16EEBFF9F9DDDA6374BADEC8 /* [Expo] Configure project */,
+				365B4FA2789072FE1B1F3752 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				77D3991D182B78233D3064F8 /* [CP] Embed Pods Frameworks */,
+				24DD66B3250A1F79A2936CBE /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -195,7 +195,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				49009E5A6D10293AE642734A /* PrivacyInfo.xcprivacy in Resources */,
+				93D0099D8BBE562DE8B01A07 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -239,7 +239,25 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		16EEBFF9F9DDDA6374BADEC8 /* [Expo] Configure project */ = {
+		24DD66B3250A1F79A2936CBE /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-CopyableTexter/Pods-CopyableTexter-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-CopyableTexter/Pods-CopyableTexter-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		365B4FA2789072FE1B1F3752 /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -257,24 +275,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-CopyableTexter/expo-configure-project.sh\"\n";
-		};
-		77D3991D182B78233D3064F8 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-CopyableTexter/Pods-CopyableTexter-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-CopyableTexter/Pods-CopyableTexter-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
 		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -320,7 +320,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				6D31FA250F1E484EC263729E /* ExpoModulesProvider.swift in Sources */,
+				254106D1FFC53036F856688A /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -329,7 +329,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 84E4DDB4EA076425D25A2693 /* Pods-CopyableTexter.debug.xcconfig */;
+			baseConfigurationReference = F99C8257158481C5740CAC9C /* Pods-CopyableTexter.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -366,7 +366,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 751ED85C81BC4E964726A984 /* Pods-CopyableTexter.release.xcconfig */;
+			baseConfigurationReference = 08D97D0B5CD78200CD5BE0F4 /* Pods-CopyableTexter.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
