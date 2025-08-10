@@ -2,7 +2,7 @@ import * as Clipboard from 'expo-clipboard';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, FlatList, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { Alert, FlatList, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const DEFAULT_CHUNK_SIZE = 1000;
@@ -15,6 +15,8 @@ type BookRecord = {
   fontSize: number;
   chunkSize: number;
   lastCopiedIndex: number;
+  attachText?: string;
+  attachEnabled?: boolean;
   updatedAt: number;
 };
 const buildBookKey = (name: string, length: number) => `${name || 'unknown'}__len_${length}`;
@@ -137,6 +139,11 @@ export default function HomeScreen() {
   const [collapsedSet, setCollapsedSet] = useState<Set<number>>(new Set());
   const [bookKey, setBookKey] = useState<string>('');
   const [hydrating, setHydrating] = useState<boolean>(false);
+
+  const [attachText, setAttachText] = useState<string>('');
+  const [customVisible, setCustomVisible] = useState<boolean>(false);
+  const [customDraft, setCustomDraft] = useState<string>('');
+  const [attachEnabled, setAttachEnabled] = useState<boolean>(true);
 
   type BookRecordWithKey = BookRecord & { key: string };
   const [recordsVisible, setRecordsVisible] = useState<boolean>(false);
@@ -302,11 +309,15 @@ export default function HomeScreen() {
         if (typeof rec.fontSize === 'number') setFontSize(rec.fontSize);
         if (typeof rec.chunkSize === 'number') setChunkSize(rec.chunkSize);
         if (typeof rec.lastCopiedIndex === 'number') setLastCopiedIndex(rec.lastCopiedIndex);
+        setAttachText(typeof rec.attachText === 'string' ? rec.attachText : '');
+        setAttachEnabled(typeof rec.attachEnabled === 'boolean' ? rec.attachEnabled : true);
       } else {
         // First time this book is opened: apply defaults and reset progress
         setFontSize(DEFAULT_FONT_SIZE);
         setChunkSize(DEFAULT_CHUNK_SIZE);
         setLastCopiedIndex(-1);
+        setAttachText('');
+        setAttachEnabled(true);
       }
     } catch (e: any) {
       console.warn(e);
@@ -325,21 +336,24 @@ export default function HomeScreen() {
       fontSize,
       chunkSize,
       lastCopiedIndex,
+      attachText,
+      attachEnabled,
       updatedAt: Date.now(),
     };
     saveRecord(bookKey, rec);
-  }, [bookKey, hydrating, fileName, text.length, fontSize, chunkSize, lastCopiedIndex, saveRecord]);
+  }, [bookKey, hydrating, fileName, text.length, fontSize, chunkSize, lastCopiedIndex, attachText, attachEnabled, saveRecord]);
 
   const copyChunk = useCallback(async (t: string, index: number) => {
     try {
-      await Clipboard.setStringAsync(t);
+      const extra = (attachEnabled && attachText && attachText.length > 0) ? ('\n\n' + attachText) : '';
+      await Clipboard.setStringAsync(t + extra);
       if (lastCopiedIndex !== index) {
         setLastCopiedIndex(index);
       }
     } catch (e: any) {
-      // Removed Alert on copy failure as per instructions
+      // swallow
     }
-  }, [lastCopiedIndex]);
+  }, [lastCopiedIndex, attachText, attachEnabled]);
 
   const toggleItem = useCallback((index: number) => {
     if (previewEnabled) {
@@ -358,7 +372,7 @@ export default function HomeScreen() {
   }, [previewEnabled]);
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top','left','right','bottom']}>
+    <SafeAreaView style={styles.safeArea} edges={['top','left','right']}>
       <View style={[styles.container, { paddingBottom: 16 + insets.bottom }]}>
       <Text style={styles.title}>Copyable Texter</Text>
 
@@ -381,12 +395,19 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.row}>
+        <Pressable style={styles.secondaryButton} onPress={() => { setCustomDraft(attachText); setCustomVisible(true); }}>
+          <Text style={styles.secondaryButtonText}>附加文本</Text>
+        </Pressable>
         <View style={styles.previewBox}>
           <Text style={styles.label}>缩略显示</Text>
           <Switch value={previewEnabled} onValueChange={setPreviewEnabled} />
         </View>
+        <View style={styles.previewBox}>
+          <Text style={styles.label}>复制时允许附加文本</Text>
+          <Switch value={attachEnabled} onValueChange={setAttachEnabled} />
+        </View>
         <View style={styles.fontBox}>
-          <Text style={styles.label}>字体xxx</Text>
+          <Text style={styles.label}>字体</Text>
           <Pressable onPress={() => setFontSize(v => Math.max(2, v - 1))} style={styles.miniBtn}>
             <Text style={styles.miniBtnText}>A-</Text>
           </Pressable>
@@ -431,7 +452,7 @@ export default function HomeScreen() {
                     <View style={{ flex: 1 }}>
                       <Text style={styles.recordTitle} numberOfLines={1} ellipsizeMode="tail">{r.fileName || '[未命名]'}</Text>
                       <Text style={styles.recordMeta} numberOfLines={2} ellipsizeMode="tail">
-                        长度：{r.textLength} · 段长：{r.chunkSize} · 字号：{r.fontSize} · 进度：{r.lastCopiedIndex >= 0 ? `第 ${r.lastCopiedIndex + 1} 段` : '未开始'}
+                        长度：{r.textLength} · 段长：{r.chunkSize} · 字号：{r.fontSize} · 进度：{r.lastCopiedIndex >= 0 ? `第 ${r.lastCopiedIndex + 1} 段` : '未开始'} · 附加文本：{r.attachText && r.attachText.length > 0 ? '有' : '无'}
                         {'\n'}更新时间：{new Date(r.updatedAt || 0).toLocaleString()}
                       </Text>
                     </View>
@@ -451,6 +472,46 @@ export default function HomeScreen() {
               )}
             </ScrollView>
           </View>
+        </View>
+      </Modal>
+
+      <Modal visible={customVisible} transparent animationType="fade" onRequestClose={() => setCustomVisible(false)}>
+        <View style={styles.modalBackdrop}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            keyboardVerticalOffset={insets.top}
+            style={{ flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <View style={styles.modalCard}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>自定义文本（复制时会附加在末尾）</Text>
+                <Pressable onPress={() => setCustomVisible(false)} style={styles.modalCloseBtn}>
+                  <Text style={styles.modalCloseText}>关闭</Text>
+                </Pressable>
+              </View>
+              <TextInput
+                style={styles.customInput}
+                placeholder="在此输入要随段落一并复制的文本…"
+                multiline
+                value={customDraft}
+                onChangeText={setCustomDraft}
+              />
+              <View style={styles.modalActions}>
+                <Pressable style={styles.secondaryButton} onPress={() => { setCustomDraft(''); }}>
+                  <Text style={styles.secondaryButtonText}>清空</Text>
+                </Pressable>
+                <Pressable
+                  style={styles.button}
+                  onPress={() => {
+                    setAttachText(customDraft);
+                    setCustomVisible(false);
+                  }}
+                >
+                  <Text style={styles.buttonText}>保存</Text>
+                </Pressable>
+              </View>
+            </View>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
 
@@ -524,7 +585,7 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#fff' },
   container: { flex: 1, padding: 16 },
   title: { fontSize: 20, fontWeight: '700', marginBottom: 12 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8, flexWrap: 'wrap' },
   button: { backgroundColor: '#007AFF', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 8 },
   buttonText: { color: '#fff', fontWeight: '600' },
   sizeBox: { flexDirection: 'row', alignItems: 'center', gap: 8 },
@@ -567,4 +628,5 @@ const styles = StyleSheet.create({
   dangerButtonText: { color: '#fff', fontWeight: '700' },
   dangerOutlineBtn: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: '#EF4444' },
   dangerOutlineBtnText: { color: '#EF4444', fontWeight: '600' },
+  customInput: { borderWidth: 1, borderColor: '#DDD', borderRadius: 8, minHeight: 120, padding: 10, textAlignVertical: 'top', marginBottom: 8 },
 });
